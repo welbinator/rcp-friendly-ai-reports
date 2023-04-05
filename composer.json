@@ -1,0 +1,12 @@
+{
+    "name": "james_welbes/rcp-friendly-ai-reports",
+    "authors": [
+        {
+            "name": "James Welbes",
+            "email": "james.welbes@gmail.com"
+        }
+    ],
+    "require": {
+        "guzzlehttp/guzzle": "^7.5"
+    }
+}
