@@ -97,11 +97,13 @@ function rcp_fai_reports_chatgpt_api_key_callback() {
 function rcp_fai_reports_add_dashboard_widget() {
     wp_add_dashboard_widget(
         'rcp_fai_reports_dashboard_widget',
-        __('Restrict Content Pro Reports', 'rcp-friendly-ai-reports'),
+        __('RCP FAI Reports', 'rcp'),
         'rcp_fai_reports_dashboard_widget_callback'
+        
     );
 }
 add_action('wp_dashboard_setup', 'rcp_fai_reports_add_dashboard_widget');
+
 
 // fallback for dashboard widget content
 function rcp_fai_reports_dashboard_widget_callback() {
@@ -136,6 +138,7 @@ function rcp_fai_reports_enqueue_admin_scripts($hook) {
 }
 add_action('admin_enqueue_scripts', 'rcp_fai_reports_enqueue_admin_scripts');
 
+
 //call chatgpt api and return response
 function rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday, $total_monthly_revenue, $total_daily_revenue, $greeting, $model = 'gpt-3.5-turbo') {
 
@@ -156,24 +159,37 @@ function rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday
             ],
             [
                 'role' => 'user',
-                'content' => "{$greeting} Since yesterday, {$new_memberships_yesterday} new active memberships were added, the total monthly revenue from active monthly memberships is {$total_monthly_revenue}, and the total daily revenue from active daily memberships is {$total_daily_revenue}. Answer in a friendly way like you are a super happy assistant, and I am your boss who just came into the office, and you are excited to share this information with me."
-
+                'content' => "greeting: {$greeting}, new_memberships_yesterday: {$new_memberships_yesterday}, total_monthly_revenue: {$total_monthly_revenue}, total_daily_revenue: {$total_daily_revenue}",
             ],
-            
         ],
     ];
 
     try {
-        $response = $client->post('v1/chat/completions', [
-            'json' => $params,
-        ]);
+        // $response = $client->post('v1/chat/completions', [
+        //     'json' => $params,
+        // ]);
 
-        $response_data = json_decode($response->getBody(), true);
-        return $response_data['choices'][0]['message']['content'];
+        // $response_data = json_decode($response->getBody(), true);
+        // $chatgpt_response = $response_data['choices'][0]['message']['content'];
+
+        // Output the report
+        echo '<p>' . $greeting . '</p>';
+
+        echo '<h3>Total Memberships</h3>';
+        echo '<p>' . __('What a fantastic day! We had ', 'rcp') . $new_memberships_yesterday . __(' new active memberships added since yesterday. Keep up the great work!', 'rcp') . '</p>';
+
+        echo '<h3>Monthly Revenue</h3>';
+        echo '<p>' . __('Incredible! Our total monthly revenue from active monthly memberships is now $', 'rcp') . number_format($total_monthly_revenue, 2) . __('. We are doing an amazing job!', 'rcp') . '</p>';
+
+        echo '<h3>Daily Revenue</h3>';
+        echo '<p>' . __('And guess what? The total daily revenue from active daily memberships is a whopping $', 'rcp') . number_format($total_daily_revenue, 2) . __('. Let\'s keep this momentum going!', 'rcp') . '</p>';
     } catch (ClientException $e) {
         return 'Error: ' . $e->getMessage();
     }
 }
+
+
+
 
 
 
