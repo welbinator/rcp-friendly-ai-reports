@@ -26,7 +26,7 @@ define('RCP_FAI_REPORTS_PLUGIN_URL', plugin_dir_url(__FILE__));
 // Include Composer autoload file
 require_once RCP_FAI_REPORTS_PLUGIN_DIR . 'vendor/autoload.php';
 
-// Include the settings file from the 'admin' folder
+// Include the functions file from the 'includes' folder
 require_once RCP_FAI_REPORTS_PLUGIN_DIR . 'includes/functions.php';
 
 // Load plugin textdomain for translations
@@ -46,5 +46,41 @@ function rcp_fai_reports_deactivate() {
     // Add any deactivation code here, such as removing database tables or plugin options
 }
 register_deactivation_hook(__FILE__, 'rcp_fai_reports_deactivate');
+
+// Enqueue scrips and styles
+
+//admin.js 
+function rcp_fai_reports_enqueue_admin_scripts($hook) {
+    if ('index.php' !== $hook) {
+        return;
+    }
+
+    wp_enqueue_script(
+        'rcp_fai_reports_admin_script',
+        RCP_FAI_REPORTS_PLUGIN_URL . 'admin/js/admin.js',
+        array('jquery'),
+        RCP_FAI_REPORTS_VERSION,
+        true
+    );
+
+    wp_localize_script(
+        'rcp_fai_reports_admin_script',
+        'rcpFaiReportsAjax',
+        array(
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'nonce'   => wp_create_nonce('rcp_fai_reports_nonce')
+        )
+    );
+    wp_enqueue_style(
+        'rcp-friendly-ai-reports-admin',
+        plugin_dir_url(__FILE__) . 'admin/css/admin.css',
+        array(),
+        '1.0.0',
+        'all'
+    );
+}
+add_action('admin_enqueue_scripts', 'rcp_fai_reports_enqueue_admin_scripts');
+
+
 
 // Main plugin functionality goes here
