@@ -137,7 +137,8 @@ function rcp_fai_reports_enqueue_admin_scripts($hook) {
 add_action('admin_enqueue_scripts', 'rcp_fai_reports_enqueue_admin_scripts');
 
 //call chatgpt api and return response
-function rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday, $total_monthly_revenue, $greeting, $model = 'gpt-3.5-turbo') {
+function rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday, $total_monthly_revenue, $total_daily_revenue, $greeting, $model = 'gpt-3.5-turbo') {
+
     $client = new Client([
         'base_uri' => 'https://api.openai.com/',
         'headers' => [
@@ -155,7 +156,8 @@ function rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday
             ],
             [
                 'role' => 'user',
-                'content' => "{$greeting} Since yesterday, {$new_memberships_yesterday} new active memberships were added, and the total monthly revenue from active monthly memberships is {$total_monthly_revenue}. Answer in a friendly way like you are a super happy assistant, and I am your boss who just came into the office, and you are excited to share this information with me."
+                'content' => "{$greeting} Since yesterday, {$new_memberships_yesterday} new active memberships were added, the total monthly revenue from active monthly memberships is {$total_monthly_revenue}, and the total daily revenue from active daily memberships is {$total_daily_revenue}. Answer in a friendly way like you are a super happy assistant, and I am your boss who just came into the office, and you are excited to share this information with me."
+
             ],
             
         ],
@@ -199,13 +201,21 @@ function rcp_fai_reports_run_report_ajax_handler() {
 
 
     // Query for total monthly revenue from active monthly memberships
-    $monthly_revenue_query = $wpdb->prepare("SELECT SUM(recurring_amount) AS total_monthly_revenue FROM {$wpdb->prefix}rcp_memberships WHERE status = 'active' AND recurring_amount > 0;");
-    $monthly_revenue_result = $wpdb->get_var($monthly_revenue_query);
-    $total_monthly_revenue = floatval($monthly_revenue_result);
+$monthly_revenue_query = $wpdb->prepare("SELECT SUM(m.recurring_amount) AS total_monthly_revenue FROM {$wpdb->prefix}rcp_memberships AS m JOIN {$wpdb->prefix}restrict_content_pro AS s ON m.object_id = s.id WHERE m.status = 'active' AND m.recurring_amount > 0 AND s.duration_unit = 'month';");
+$total_monthly_revenue = floatval($wpdb->get_var($monthly_revenue_query));
+
+// Query for total daily revenue from active daily memberships
+$daily_revenue_query = $wpdb->prepare("SELECT SUM(m.recurring_amount) AS total_daily_revenue FROM {$wpdb->prefix}rcp_memberships AS m JOIN {$wpdb->prefix}restrict_content_pro AS s ON m.object_id = s.id WHERE m.status = 'active' AND m.recurring_amount > 0 AND s.duration_unit = 'day';");
+$total_daily_revenue = floatval($wpdb->get_var($daily_revenue_query));
+
+
+
+
 
      // Get the ChatGPT report with the new data
      $api_key = get_option('rcp_fai_reports_chatgpt_api_key');
-     $chatgpt_response = rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday, $total_monthly_revenue, $greeting);
+     $chatgpt_response = rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday, $total_monthly_revenue, $total_daily_revenue, $greeting);
+
 
 
     echo $chatgpt_response;
