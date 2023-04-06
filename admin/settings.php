@@ -184,8 +184,8 @@ function rcp_fai_reports_run_report_ajax_handler() {
 
     global $wpdb;
 
-    // Query for total memberships
-    $query = $wpdb->prepare("SELECT COUNT(*) AS total_memberships FROM {$wpdb->prefix}rcp_memberships;");
+    // Query for total active memberships
+    $query = $wpdb->prepare("SELECT COUNT(*) AS total_memberships FROM {$wpdb->prefix}rcp_memberships WHERE status = 'active';");
     $result = $wpdb->get_var($query);
     $total_memberships = intval($result);
 
@@ -202,6 +202,7 @@ function rcp_fai_reports_run_report_ajax_handler() {
 
     wp_die();
 }
+
 
 
 
