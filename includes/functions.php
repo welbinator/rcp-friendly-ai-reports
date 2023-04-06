@@ -139,28 +139,20 @@ function rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday
     ];
 
     try {
-        // $response = $client->post('v1/chat/completions', [
-        //     'json' => $params,
-        // ]);
+        $response = $client->post('v1/chat/completions', [
+            'json' => $params,
+        ]);
 
-        // $response_data = json_decode($response->getBody(), true);
-        // $chatgpt_response = $response_data['choices'][0]['message']['content'];
+        $response_data = json_decode($response->getBody(), true);
+        $chatgpt_response = $response_data['choices'][0]['message']['content'];
 
         // Output the report
-        echo '<p>' . $greeting . '</p>';
-
-        echo '<h3>Total Memberships</h3>';
-        echo '<p>' . __('What a fantastic day! We had ', 'rcp') . $new_memberships_yesterday . __(' new active memberships added since yesterday. Keep up the great work!', 'rcp') . '</p>';
-
-        echo '<h3>Monthly Revenue</h3>';
-        echo '<p>' . __('Incredible! Our total monthly revenue from active monthly memberships is now $', 'rcp') . number_format($total_monthly_revenue, 2) . __('. We are doing an amazing job!', 'rcp') . '</p>';
-
-        echo '<h3>Daily Revenue</h3>';
-        echo '<p>' . __('And guess what? The total daily revenue from active daily memberships is a whopping $', 'rcp') . number_format($total_daily_revenue, 2) . __('. Let\'s keep this momentum going!', 'rcp') . '</p>';
+        echo $chatgpt_response;
     } catch (ClientException $e) {
         return 'Error: ' . $e->getMessage();
     }
 }
+
 
 
 
@@ -175,11 +167,11 @@ function rcp_fai_reports_run_report_ajax_handler() {
     global $wpdb;
 
     // Get the first name of the logged-in user
-    $current_user = wp_get_current_user();
-    $first_name = $current_user->user_firstname;
+$current_user = wp_get_current_user();
+$first_name = $current_user->user_firstname;
 
-    // Set a default greeting if the first name is empty
-    $greeting = empty($first_name) ? 'Hello there!' : "Hello {$first_name}!";
+// Set a default greeting if the first name is empty
+$greeting = empty($first_name) ? 'Hello, friend!' : "Hello, {$first_name}!";
 
       // Get the date range for the previous day
       $start_date = date('Y-m-d 00:00:00', strtotime('-1 day'));
