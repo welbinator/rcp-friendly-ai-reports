@@ -151,28 +151,30 @@ function rcp_fai_reports_get_chatgpt_response($api_key, $input, $model = 'gpt-3.
 
 function rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday, $total_monthly_revenue, $total_daily_revenue, $first_name) {
     // Get the friendly greeting
-    $greeting_input = "give me a friendly greeting, using the first name of the person logged in. If no first name exists, use 'friend'";
+    $greeting_input = "give me a friendly greeting, using the first name of the person logged in. If no first name exists, use 'friend'.";
     $greeting_output = rcp_fai_reports_get_chatgpt_response($api_key, $greeting_input);
     echo '<p>' . $greeting_output . '</p>';
 
     // Get the new memberships report
-    $new_memberships_input = "There were {$new_memberships_yesterday} since yesterday, tell me in a humanly way how many new memberships we gained since yesterday. If the number is greater than 0, be excited about it.";
+    $new_memberships_input = "Report: {$new_memberships_yesterday} new memberships since yesterday. Describe the number of new memberships in a humanly, friendly, and excited way if the number is greater than 0. Do not acknowledge or greet the user. Keep the output to 3 or fewer sentences.";
     $new_memberships_output = rcp_fai_reports_get_chatgpt_response($api_key, $new_memberships_input);
     echo '<h3>Total Memberships</h3>';
     echo '<p>' . $new_memberships_output . '</p>';
 
     // Get the monthly revenue report
-    $monthly_revenue_input = "There is {$total_monthly_revenue} in current monthly revenue from active monthly subscriptions, tell me in a humanly way how much monthly revenue we have currently.";
+    $monthly_revenue_input = "Report: {$total_monthly_revenue} in current monthly revenue from active monthly subscriptions. Describe the amount of monthly revenue in a humanly and friendly way. Do not acknowledge or greet the user. Keep the output to 3 or fewer sentences. Keep the excitement level at a 4 out of 10.";
     $monthly_revenue_output = rcp_fai_reports_get_chatgpt_response($api_key, $monthly_revenue_input);
     echo '<h3>Monthly Revenue</h3>';
     echo '<p>' . $monthly_revenue_output . '</p>';
 
     // Get the daily revenue report
-    $daily_revenue_input = "There is {$total_daily_revenue} in current daily revenue from active daily subscriptions, tell me in a humanly way how much daily revenue we have currently.";
+    $daily_revenue_input = "Report: {$total_daily_revenue} in current daily revenue from active daily subscriptions. Describe the amount of daily revenue in a humanly and friendly way. Do not acknowledge or greet the user. Keep the output to 3 or fewer sentences. Keep the excitement level at a 4 out of 10.";
     $daily_revenue_output = rcp_fai_reports_get_chatgpt_response($api_key, $daily_revenue_input);
     echo '<h3>Daily Revenue</h3>';
     echo '<p>' . $daily_revenue_output . '</p>';
 }
+
+
 
 
 
