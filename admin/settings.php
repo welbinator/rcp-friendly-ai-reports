@@ -4,7 +4,6 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use GuzzleHttp\Client;
 
-
 //add the settings page and submenu page.
 function rcp_fai_reports_display_settings_page() {
     // Check if the user has the required capability
@@ -138,7 +137,7 @@ function rcp_fai_reports_enqueue_admin_scripts($hook) {
 add_action('admin_enqueue_scripts', 'rcp_fai_reports_enqueue_admin_scripts');
 
 //call chatgpt api and return response
-function rcp_fai_reports_get_chatgpt_report($api_key, $total_memberships, $total_monthly_revenue, $first_name, $model = 'gpt-3.5-turbo') {
+function rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday, $total_monthly_revenue, $greeting, $model = 'gpt-3.5-turbo') {
     $client = new Client([
         'base_uri' => 'https://api.openai.com/',
         'headers' => [
@@ -156,8 +155,9 @@ function rcp_fai_reports_get_chatgpt_report($api_key, $total_memberships, $total
             ],
             [
                 'role' => 'user',
-                'content' => "There are {$total_memberships} total active memberships and the total monthly revenue from active monthly memberships is {$total_monthly_revenue}. Answer in a friendly way like you are a super happy assistant and I am your boss named {$first_name} and I just came into the office and you are excited to share this information with me."
+                'content' => "{$greeting} Since yesterday, {$new_memberships_yesterday} new active memberships were added, and the total monthly revenue from active monthly memberships is {$total_monthly_revenue}. Answer in a friendly way like you are a super happy assistant, and I am your boss who just came into the office, and you are excited to share this information with me."
             ],
+            
         ],
     ];
 
@@ -189,19 +189,24 @@ function rcp_fai_reports_run_report_ajax_handler() {
     // Set a default greeting if the first name is empty
     $greeting = empty($first_name) ? 'Hello there!' : "Hello {$first_name}!";
 
-    // Query for total active memberships
-    $query = $wpdb->prepare("SELECT COUNT(*) AS total_memberships FROM {$wpdb->prefix}rcp_memberships WHERE status = 'active';");
-    $result = $wpdb->get_var($query);
-    $total_memberships = intval($result);
+      // Get the date range for the previous day
+      $start_date = date('Y-m-d 00:00:00', strtotime('-1 day'));
+      $end_date = date('Y-m-d H:i:s'); // Update this line to use the current date and time
+  
+      // Query for new active memberships added yesterday until the moment the button is clicked
+      $new_memberships_query = $wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}rcp_memberships WHERE status = 'active' AND created_date >= %s AND created_date <= %s;", $start_date, $end_date);
+      $new_memberships_yesterday = intval($wpdb->get_var($new_memberships_query));
+
 
     // Query for total monthly revenue from active monthly memberships
     $monthly_revenue_query = $wpdb->prepare("SELECT SUM(recurring_amount) AS total_monthly_revenue FROM {$wpdb->prefix}rcp_memberships WHERE status = 'active' AND recurring_amount > 0;");
     $monthly_revenue_result = $wpdb->get_var($monthly_revenue_query);
     $total_monthly_revenue = floatval($monthly_revenue_result);
 
-    // Get the ChatGPT report with the new data
-    $api_key = get_option('rcp_fai_reports_chatgpt_api_key');
-    $chatgpt_response = rcp_fai_reports_get_chatgpt_report($api_key, $total_memberships, $total_monthly_revenue, $first_name);
+     // Get the ChatGPT report with the new data
+     $api_key = get_option('rcp_fai_reports_chatgpt_api_key');
+     $chatgpt_response = rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday, $total_monthly_revenue, $greeting);
+
 
     echo $chatgpt_response;
 
