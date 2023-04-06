@@ -155,7 +155,7 @@ function rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday
             ],
             [
                 'role' => 'user',
-                'content' => "{$greeting} Yesterday, {$new_memberships_yesterday} new active memberships were added, and the total monthly revenue from active monthly memberships is {$total_monthly_revenue}. Answer in a friendly way like you are a super happy assistant, and I am your boss who just came into the office, and you are excited to share this information with me."
+                'content' => "{$greeting} Since yesterday, {$new_memberships_yesterday} new active memberships were added, and the total monthly revenue from active monthly memberships is {$total_monthly_revenue}. Answer in a friendly way like you are a super happy assistant, and I am your boss who just came into the office, and you are excited to share this information with me."
             ],
             
         ],
@@ -189,14 +189,13 @@ function rcp_fai_reports_run_report_ajax_handler() {
     // Set a default greeting if the first name is empty
     $greeting = empty($first_name) ? 'Hello there!' : "Hello {$first_name}!";
 
-    // Get the date range for the previous day
-    $start_date = date('Y-m-d 00:00:00', strtotime('-1 day'));
-    $end_date = date('Y-m-d 23:59:59', strtotime('-1 day'));
-
-    // Query for new active memberships added yesterday
-    $yesterday = date('Y-m-d', strtotime('-1 day'));
-    $new_memberships_query = $wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}rcp_memberships WHERE status = 'active' AND DATE(created_date) = %s;", $yesterday);
-    $new_memberships_yesterday = intval($wpdb->get_var($new_memberships_query));
+      // Get the date range for the previous day
+      $start_date = date('Y-m-d 00:00:00', strtotime('-1 day'));
+      $end_date = date('Y-m-d H:i:s'); // Update this line to use the current date and time
+  
+      // Query for new active memberships added yesterday until the moment the button is clicked
+      $new_memberships_query = $wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}rcp_memberships WHERE status = 'active' AND created_date >= %s AND created_date <= %s;", $start_date, $end_date);
+      $new_memberships_yesterday = intval($wpdb->get_var($new_memberships_query));
 
 
     // Query for total monthly revenue from active monthly memberships
