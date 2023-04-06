@@ -113,32 +113,6 @@ function rcp_fai_reports_dashboard_widget_callback() {
     <?php
 }
 
-//enque admin.js 
-function rcp_fai_reports_enqueue_admin_scripts($hook) {
-    if ('index.php' !== $hook) {
-        return;
-    }
-
-    wp_enqueue_script(
-        'rcp_fai_reports_admin_script',
-        RCP_FAI_REPORTS_PLUGIN_URL . 'admin/js/admin.js',
-        array('jquery'),
-        RCP_FAI_REPORTS_VERSION,
-        true
-    );
-
-    wp_localize_script(
-        'rcp_fai_reports_admin_script',
-        'rcpFaiReportsAjax',
-        array(
-            'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce'   => wp_create_nonce('rcp_fai_reports_nonce')
-        )
-    );
-}
-add_action('admin_enqueue_scripts', 'rcp_fai_reports_enqueue_admin_scripts');
-
-
 //call chatgpt api and return response
 function rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday, $total_monthly_revenue, $total_daily_revenue, $greeting, $model = 'gpt-3.5-turbo') {
 
