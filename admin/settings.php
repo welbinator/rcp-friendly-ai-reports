@@ -138,7 +138,7 @@ function rcp_fai_reports_enqueue_admin_scripts($hook) {
 add_action('admin_enqueue_scripts', 'rcp_fai_reports_enqueue_admin_scripts');
 
 //call chatgpt api and return response
-function rcp_fai_reports_get_chatgpt_report($api_key, $total_memberships, $total_monthly_revenue, $model = 'gpt-3.5-turbo') {
+function rcp_fai_reports_get_chatgpt_report($api_key, $total_memberships, $total_monthly_revenue, $first_name, $model = 'gpt-3.5-turbo') {
     $client = new Client([
         'base_uri' => 'https://api.openai.com/',
         'headers' => [
@@ -156,10 +156,8 @@ function rcp_fai_reports_get_chatgpt_report($api_key, $total_memberships, $total
             ],
             [
                 'role' => 'user',
-                'content' => "There are {$total_memberships} total memberships and the total monthly revenue from active monthly memberships is {$total_monthly_revenue}. Answer in a friendly way like you are a super happy assistant and I am your boss and I just came into the office and you are excited to share this information with me."
+                'content' => "There are {$total_memberships} total active memberships and the total monthly revenue from active monthly memberships is {$total_monthly_revenue}. Answer in a friendly way like you are a super happy assistant and I am your boss named {$first_name} and I just came into the office and you are excited to share this information with me."
             ],
-            
-            
         ],
     ];
 
@@ -184,6 +182,13 @@ function rcp_fai_reports_run_report_ajax_handler() {
 
     global $wpdb;
 
+    // Get the first name of the logged-in user
+    $current_user = wp_get_current_user();
+    $first_name = $current_user->user_firstname;
+
+    // Set a default greeting if the first name is empty
+    $greeting = empty($first_name) ? 'Hello there!' : "Hello {$first_name}!";
+
     // Query for total active memberships
     $query = $wpdb->prepare("SELECT COUNT(*) AS total_memberships FROM {$wpdb->prefix}rcp_memberships WHERE status = 'active';");
     $result = $wpdb->get_var($query);
@@ -196,12 +201,13 @@ function rcp_fai_reports_run_report_ajax_handler() {
 
     // Get the ChatGPT report with the new data
     $api_key = get_option('rcp_fai_reports_chatgpt_api_key');
-    $chatgpt_response = rcp_fai_reports_get_chatgpt_report($api_key, $total_memberships, $total_monthly_revenue);
+    $chatgpt_response = rcp_fai_reports_get_chatgpt_report($api_key, $total_memberships, $total_monthly_revenue, $first_name);
 
     echo $chatgpt_response;
 
     wp_die();
 }
+
 
 
 
