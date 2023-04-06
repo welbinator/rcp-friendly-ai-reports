@@ -121,7 +121,7 @@ function rcp_fai_reports_enqueue_admin_scripts($hook) {
 
     wp_enqueue_script(
         'rcp_fai_reports_admin_script',
-        RCP_FAI_REPORTS_PLUGIN_URL . 'admin/admin.js',
+        RCP_FAI_REPORTS_PLUGIN_URL . 'admin/js/admin.js',
         array('jquery'),
         RCP_FAI_REPORTS_VERSION,
         true

@@ -27,7 +27,7 @@ define('RCP_FAI_REPORTS_PLUGIN_URL', plugin_dir_url(__FILE__));
 require_once RCP_FAI_REPORTS_PLUGIN_DIR . 'vendor/autoload.php';
 
 // Include the settings file from the 'admin' folder
-require_once RCP_FAI_REPORTS_PLUGIN_DIR . 'admin/settings.php';
+require_once RCP_FAI_REPORTS_PLUGIN_DIR . 'includes/functions.php';
 
 // Load plugin textdomain for translations
 function rcp_fai_reports_load_textdomain() {
