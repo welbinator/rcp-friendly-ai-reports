@@ -138,7 +138,7 @@ function rcp_fai_reports_enqueue_admin_scripts($hook) {
 add_action('admin_enqueue_scripts', 'rcp_fai_reports_enqueue_admin_scripts');
 
 //call chatgpt api and return response
-function rcp_fai_reports_get_chatgpt_report($api_key, $total_memberships, $model = 'gpt-3.5-turbo') {
+function rcp_fai_reports_get_chatgpt_report($api_key, $total_memberships, $total_monthly_revenue, $model = 'gpt-3.5-turbo') {
     $client = new Client([
         'base_uri' => 'https://api.openai.com/',
         'headers' => [
@@ -156,8 +156,9 @@ function rcp_fai_reports_get_chatgpt_report($api_key, $total_memberships, $model
             ],
             [
                 'role' => 'user',
-                'content' => 'There are ' . $total_memberships . ' total memberships in this website. How many total memberships do I have?. Answer in a friendly way like you are a super happy assistant and I am your boss and I just came in to the office and you are excited to share this information with me.'
+                'content' => "There are {$total_memberships} total memberships and the total monthly revenue from active monthly memberships is {$total_monthly_revenue}. Answer in a friendly way like you are a super happy assistant and I am your boss and I just came into the office and you are excited to share this information with me."
             ],
+            
             
         ],
     ];
@@ -183,26 +184,25 @@ function rcp_fai_reports_run_report_ajax_handler() {
 
     global $wpdb;
 
-    $table_prefix = $wpdb->prefix;
-    $memberships_table = $table_prefix . 'rcp_memberships';
-
-    $query = $wpdb->prepare("SELECT COUNT(*) AS total_memberships FROM {$memberships_table};");
-
-
+    // Query for total memberships
+    $query = $wpdb->prepare("SELECT COUNT(*) AS total_memberships FROM {$wpdb->prefix}rcp_memberships;");
     $result = $wpdb->get_var($query);
     $total_memberships = intval($result);
 
+    // Query for total monthly revenue from active monthly memberships
+    $monthly_revenue_query = $wpdb->prepare("SELECT SUM(recurring_amount) AS total_monthly_revenue FROM {$wpdb->prefix}rcp_memberships WHERE status = 'active' AND recurring_amount > 0;");
+    $monthly_revenue_result = $wpdb->get_var($monthly_revenue_query);
+    $total_monthly_revenue = floatval($monthly_revenue_result);
 
+    // Get the ChatGPT report with the new data
     $api_key = get_option('rcp_fai_reports_chatgpt_api_key');
-    
-
-    $chatgpt_response = rcp_fai_reports_get_chatgpt_report($api_key, $total_memberships);
-
+    $chatgpt_response = rcp_fai_reports_get_chatgpt_report($api_key, $total_memberships, $total_monthly_revenue);
 
     echo $chatgpt_response;
 
     wp_die();
 }
+
 
 
 add_action('wp_ajax_rcp_fai_reports_run_report', 'rcp_fai_reports_run_report_ajax_handler');
