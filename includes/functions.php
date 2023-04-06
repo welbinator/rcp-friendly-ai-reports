@@ -113,9 +113,8 @@ function rcp_fai_reports_dashboard_widget_callback() {
     <?php
 }
 
-//call chatgpt api and return response
-function rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday, $total_monthly_revenue, $total_daily_revenue, $greeting, $model = 'gpt-3.5-turbo') {
-
+// send multiple inputs to chatgpt and receive multiple outputs
+function rcp_fai_reports_get_chatgpt_response($api_key, $input, $model = 'gpt-3.5-turbo') {
     $client = new Client([
         'base_uri' => 'https://api.openai.com/',
         'headers' => [
@@ -133,7 +132,7 @@ function rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday
             ],
             [
                 'role' => 'user',
-                'content' => "greeting: {$greeting}, new_memberships_yesterday: {$new_memberships_yesterday}, total_monthly_revenue: {$total_monthly_revenue}, total_daily_revenue: {$total_daily_revenue}",
+                'content' => $input,
             ],
         ],
     ];
@@ -144,19 +143,36 @@ function rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday
         ]);
 
         $response_data = json_decode($response->getBody(), true);
-        $chatgpt_response = $response_data['choices'][0]['message']['content'];
-
-        // Output the report
-        echo $chatgpt_response;
+        return $response_data['choices'][0]['message']['content'];
     } catch (ClientException $e) {
         return 'Error: ' . $e->getMessage();
     }
 }
 
+function rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday, $total_monthly_revenue, $total_daily_revenue, $first_name) {
+    // Get the friendly greeting
+    $greeting_input = "give me a friendly greeting, using the first name of the person logged in. If no first name exists, use 'friend'";
+    $greeting_output = rcp_fai_reports_get_chatgpt_response($api_key, $greeting_input);
+    echo '<p>' . $greeting_output . '</p>';
 
+    // Get the new memberships report
+    $new_memberships_input = "There were {$new_memberships_yesterday} since yesterday, tell me in a humanly way how many new memberships we gained since yesterday. If the number is greater than 0, be excited about it.";
+    $new_memberships_output = rcp_fai_reports_get_chatgpt_response($api_key, $new_memberships_input);
+    echo '<h3>Total Memberships</h3>';
+    echo '<p>' . $new_memberships_output . '</p>';
 
+    // Get the monthly revenue report
+    $monthly_revenue_input = "There is {$total_monthly_revenue} in current monthly revenue from active monthly subscriptions, tell me in a humanly way how much monthly revenue we have currently.";
+    $monthly_revenue_output = rcp_fai_reports_get_chatgpt_response($api_key, $monthly_revenue_input);
+    echo '<h3>Monthly Revenue</h3>';
+    echo '<p>' . $monthly_revenue_output . '</p>';
 
-
+    // Get the daily revenue report
+    $daily_revenue_input = "There is {$total_daily_revenue} in current daily revenue from active daily subscriptions, tell me in a humanly way how much daily revenue we have currently.";
+    $daily_revenue_output = rcp_fai_reports_get_chatgpt_response($api_key, $daily_revenue_input);
+    echo '<h3>Daily Revenue</h3>';
+    echo '<p>' . $daily_revenue_output . '</p>';
+}
 
 
 
