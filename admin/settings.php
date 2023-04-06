@@ -109,7 +109,6 @@ function rcp_fai_reports_dashboard_widget_callback() {
     ?>
     <button id="rcp_fai_reports_run_report_button"><?php _e('Run Report', 'rcp-friendly-ai-reports'); ?></button>
     <div id="rcp_fai_reports_result"></div>
-    
     <?php
 }
 
@@ -131,15 +130,15 @@ function rcp_fai_reports_enqueue_admin_scripts($hook) {
         'rcp_fai_reports_admin_script',
         'rcpFaiReportsAjax',
         array(
-            'ajaxUrl' => admin_url('admin-ajax.php')
-            // 'nonce'   => wp_create_nonce('rcp_fai_reports_nonce')
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'nonce'   => wp_create_nonce('rcp_fai_reports_nonce')
         )
     );
 }
 add_action('admin_enqueue_scripts', 'rcp_fai_reports_enqueue_admin_scripts');
 
 //call chatgpt api and return response
-function rcp_fai_reports_get_chatgpt_report( $api_key, $total_memberships, $model = 'gpt-3.5-turbo') {
+function rcp_fai_reports_get_chatgpt_report($api_key, $total_memberships, $model = 'gpt-3.5-turbo') {
     $client = new Client([
         'base_uri' => 'https://api.openai.com/',
         'headers' => [
@@ -153,16 +152,15 @@ function rcp_fai_reports_get_chatgpt_report( $api_key, $total_memberships, $mode
         'messages' => [
             [
                 'role' => 'system',
-                'content' => 'You are a helpful assistant that can generate a report of total memberships'
+                'content' => 'You are a friendly, cheerful person who loves to give reports based on the data given to you'
             ],
             [
-                
-                    'role' => 'user',
-                    'content' => 'There are ' . $total_memberships . 'total memberships.' . 'Tell me how many memberships there are in a friendly manner'
-                ],
+                'role' => 'user',
+                'content' => 'There are ' . $total_memberships . ' total memberships in this website. How many total memberships do I have?. Answer in a friendly way like you are a super happy assistant and I am your boss and I just came in to the office and you are excited to share this information with me.'
             ],
-        ];
-        
+            
+        ],
+    ];
 
     try {
         $response = $client->post('v1/chat/completions', [
@@ -177,30 +175,26 @@ function rcp_fai_reports_get_chatgpt_report( $api_key, $total_memberships, $mode
 }
 
 
+
+
 // server side ajax handler to run SQL query and fetch ChatGPT response
 function rcp_fai_reports_run_report_ajax_handler() {
-    // check_ajax_referer('rcp_fai_reports_nonce', 'nonce');
+    check_ajax_referer('rcp_fai_reports_nonce', 'nonce');
 
     global $wpdb;
 
     $table_prefix = $wpdb->prefix;
     $memberships_table = $table_prefix . 'rcp_memberships';
-    error_log(print_r($memberships_table,true));
-    
-    $query = $wpdb->prepare("SELECT COUNT(*) AS total_memberships FROM {$memberships_table};");
-    // $query = $wpdb->prepare("SELECT COUNT(*) AS total_memberships FROM wp_rcp_memberships;");
 
-    error_log(print_r($query,true));
+    $query = $wpdb->prepare("SELECT COUNT(*) AS total_memberships FROM {$memberships_table};");
+
+
     $result = $wpdb->get_var($query);
-    error_log(print_r($result,true));
     $total_memberships = intval($result);
-    $total_memberships = 3;
-    error_log(print_r($total_memberships,true));
-   
+
 
     $api_key = get_option('rcp_fai_reports_chatgpt_api_key');
     
-
 
     $chatgpt_response = rcp_fai_reports_get_chatgpt_report($api_key, $total_memberships);
 
@@ -210,4 +204,5 @@ function rcp_fai_reports_run_report_ajax_handler() {
     wp_die();
 }
 
-add_action('wp_ajax_rcp_fai_reports_run_report', 'rcp_fai_reports_run_report_ajax_handler'); 
+
+add_action('wp_ajax_rcp_fai_reports_run_report', 'rcp_fai_reports_run_report_ajax_handler');
