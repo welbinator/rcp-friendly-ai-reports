@@ -149,7 +149,7 @@ function rcp_fai_reports_get_chatgpt_response($api_key, $input, $model = 'gpt-3.
     }
 }
 
-function rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday, $total_monthly_revenue, $total_daily_revenue, $first_name) {
+function rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday, $total_monthly_revenue, $total_daily_revenue, $total_annual_revenue, $first_name) {
     // Get the friendly greeting
     $greeting_input = "give me a friendly greeting, using the first name of the person logged in. If no first name exists, use 'friend'";
     $greeting_output = rcp_fai_reports_get_chatgpt_response($api_key, $greeting_input);
@@ -172,6 +172,12 @@ function rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday
     $daily_revenue_output = rcp_fai_reports_get_chatgpt_response($api_key, $daily_revenue_input);
     echo '<h3>Daily Revenue</h3>';
     echo '<p>' . $daily_revenue_output . '</p>';
+ 
+     // Get the annual revenue report
+     $annual_revenue_input = "Report: {$total_annual_revenue} in current annual revenue from active annual subscriptions. Describe the amount of annual revenue in a humanly and friendly way. Do not acknowledge or greet the user. Keep the output to 3 or fewer sentences. Keep the excitement level at a 4 out of 10.";
+     $annual_revenue_output = rcp_fai_reports_get_chatgpt_response($api_key, $annual_revenue_input);
+     echo '<h3>Annual Revenue</h3>';
+     echo '<p>' . $annual_revenue_output . '</p>';
 }
 
 
@@ -189,22 +195,26 @@ $first_name = $current_user->user_firstname;
 // Set a default greeting if the first name is empty
 $greeting = empty($first_name) ? 'Hello, friend!' : "Hello, {$first_name}!";
 
-      // Get the date range for the previous day
-      $start_date = date('Y-m-d 00:00:00', strtotime('-1 day'));
-      $end_date = date('Y-m-d H:i:s'); // Update this line to use the current date and time
-  
-      // Query for new active memberships added yesterday until the moment the button is clicked
-      $new_memberships_query = $wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}rcp_memberships WHERE status = 'active' AND created_date >= %s AND created_date <= %s;", $start_date, $end_date);
-      $new_memberships_yesterday = intval($wpdb->get_var($new_memberships_query));
+    // Get the date range for the previous day
+    $start_date = date('Y-m-d 00:00:00', strtotime('-1 day'));
+    $end_date = date('Y-m-d H:i:s'); // Update this line to use the current date and time
+
+    // Query for new active memberships added yesterday until the moment the button is clicked
+    $new_memberships_query = $wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}rcp_memberships WHERE status = 'active' AND created_date >= %s AND created_date <= %s;", $start_date, $end_date);
+    $new_memberships_yesterday = intval($wpdb->get_var($new_memberships_query));
 
 
     // Query for total monthly revenue from active monthly memberships
-$monthly_revenue_query = $wpdb->prepare("SELECT SUM(m.recurring_amount) AS total_monthly_revenue FROM {$wpdb->prefix}rcp_memberships AS m JOIN {$wpdb->prefix}restrict_content_pro AS s ON m.object_id = s.id WHERE m.status = 'active' AND m.recurring_amount > 0 AND s.duration_unit = 'month';");
-$total_monthly_revenue = floatval($wpdb->get_var($monthly_revenue_query));
+    $monthly_revenue_query = $wpdb->prepare("SELECT SUM(m.recurring_amount) AS total_monthly_revenue FROM {$wpdb->prefix}rcp_memberships AS m JOIN {$wpdb->prefix}restrict_content_pro AS s ON m.object_id = s.id WHERE m.status = 'active' AND m.recurring_amount > 0 AND s.duration_unit = 'month';");
+    $total_monthly_revenue = floatval($wpdb->get_var($monthly_revenue_query));
 
-// Query for total daily revenue from active daily memberships
-$daily_revenue_query = $wpdb->prepare("SELECT SUM(m.recurring_amount) AS total_daily_revenue FROM {$wpdb->prefix}rcp_memberships AS m JOIN {$wpdb->prefix}restrict_content_pro AS s ON m.object_id = s.id WHERE m.status = 'active' AND m.recurring_amount > 0 AND s.duration_unit = 'day';");
-$total_daily_revenue = floatval($wpdb->get_var($daily_revenue_query));
+    // Query for total daily revenue from active daily memberships
+    $daily_revenue_query = $wpdb->prepare("SELECT SUM(m.recurring_amount) AS total_daily_revenue FROM {$wpdb->prefix}rcp_memberships AS m JOIN {$wpdb->prefix}restrict_content_pro AS s ON m.object_id = s.id WHERE m.status = 'active' AND m.recurring_amount > 0 AND s.duration_unit = 'day';");
+    $total_daily_revenue = floatval($wpdb->get_var($daily_revenue_query));
+
+    // Query for total annual revenue from active annual memberships
+    $annual_revenue_query = $wpdb->prepare("SELECT SUM(m.recurring_amount) AS total_annual_revenue FROM {$wpdb->prefix}rcp_memberships AS m JOIN {$wpdb->prefix}restrict_content_pro AS s ON m.object_id = s.id WHERE m.status = 'active' AND m.recurring_amount > 0 AND s.duration_unit = 'year';");
+    $total_annual_revenue = floatval($wpdb->get_var($annual_revenue_query));
 
 
 
@@ -212,7 +222,8 @@ $total_daily_revenue = floatval($wpdb->get_var($daily_revenue_query));
 
      // Get the ChatGPT report with the new data
      $api_key = get_option('rcp_fai_reports_chatgpt_api_key');
-     $chatgpt_response = rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday, $total_monthly_revenue, $total_daily_revenue, $greeting);
+     $chatgpt_response = rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday, $total_monthly_revenue, $total_daily_revenue, $total_annual_revenue, $first_name);
+
 
 
 
