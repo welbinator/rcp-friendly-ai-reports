@@ -149,35 +149,43 @@ function rcp_fai_reports_get_chatgpt_response($api_key, $input, $model = 'gpt-3.
     }
 }
 
-function rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday, $total_monthly_revenue, $total_daily_revenue, $total_annual_revenue, $first_name) {
-    // Get the friendly greeting
-    $greeting_input = "give me a friendly greeting, using the first name of the person logged in. If no first name exists, use 'friend'";
-    $greeting_output = rcp_fai_reports_get_chatgpt_response($api_key, $greeting_input);
-    echo '<p>' . $greeting_output . '</p>';
+function rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday, $total_monthly_revenue, $total_daily_revenue, $total_annual_revenue, $total_weekly_revenue, $first_name, $current_month_revenue, $previous_year_revenue) {
 
-    // Get the new memberships report
-    $new_memberships_input = "There were {$new_memberships_yesterday} since yesterday, tell me in a humanly way how many new memberships we gained since yesterday. If the number is greater than 0, be excited about it.";
-    $new_memberships_output = rcp_fai_reports_get_chatgpt_response($api_key, $new_memberships_input);
-    echo '<h3>Total Memberships</h3>';
-    echo '<p>' . $new_memberships_output . '</p>';
+        // Get the friendly greeting
+        $greeting_input = "give me a friendly greeting, using the first name of the person logged in. If no first name exists, use 'friend'";
+        $greeting_output = rcp_fai_reports_get_chatgpt_response($api_key, $greeting_input);
+        echo '<p>' . $greeting_output . '</p>';
 
-    // Get the monthly revenue report
-    $monthly_revenue_input = "There is {$total_monthly_revenue} in current monthly revenue from active monthly subscriptions, tell me in a humanly way how much monthly revenue we have currently.";
-    $monthly_revenue_output = rcp_fai_reports_get_chatgpt_response($api_key, $monthly_revenue_input);
-    echo '<h3>Monthly Revenue</h3>';
-    echo '<p>' . $monthly_revenue_output . '</p>';
+        // Get the new memberships report
+        $new_memberships_input = "There were {$new_memberships_yesterday} since yesterday, tell me in a humanly way how many new memberships we gained since yesterday. If the number is greater than 0, be excited about it.";
+        $new_memberships_output = rcp_fai_reports_get_chatgpt_response($api_key, $new_memberships_input);
+        echo '<h3>Total Memberships</h3>';
+        echo '<p>' . $new_memberships_output . '</p>';
 
-    // Get the daily revenue report
-    $daily_revenue_input = "There is {$total_daily_revenue} in current daily revenue from active daily subscriptions, tell me in a humanly way how much daily revenue we have currently.";
-    $daily_revenue_output = rcp_fai_reports_get_chatgpt_response($api_key, $daily_revenue_input);
-    echo '<h3>Daily Revenue</h3>';
-    echo '<p>' . $daily_revenue_output . '</p>';
- 
-     // Get the annual revenue report
-     $annual_revenue_input = "Report: {$total_annual_revenue} in current annual revenue from active annual subscriptions. Describe the amount of annual revenue in a humanly and friendly way. Do not acknowledge or greet the user. Keep the output to 3 or fewer sentences. Keep the excitement level at a 4 out of 10.";
-     $annual_revenue_output = rcp_fai_reports_get_chatgpt_response($api_key, $annual_revenue_input);
-     echo '<h3>Annual Revenue</h3>';
-     echo '<p>' . $annual_revenue_output . '</p>';
+        // Get the monthly revenue report
+        $monthly_revenue_input = "There is {$total_monthly_revenue} in current monthly revenue from active monthly subscriptions, tell me in a humanly way how much monthly revenue we have currently.";
+        $monthly_revenue_output = rcp_fai_reports_get_chatgpt_response($api_key, $monthly_revenue_input);
+        echo '<h3>Monthly Revenue</h3>';
+        echo '<p>' . $monthly_revenue_output . '</p>';
+
+        // Get the daily revenue report
+        $daily_revenue_input = "There is {$total_daily_revenue} in current daily revenue from active daily subscriptions, tell me in a humanly way how much daily revenue we have currently.";
+        $daily_revenue_output = rcp_fai_reports_get_chatgpt_response($api_key, $daily_revenue_input);
+        echo '<h3>Daily Revenue</h3>';
+        echo '<p>' . $daily_revenue_output . '</p>';
+
+        // Get the annual revenue report
+        $annual_revenue_input = "Report: {$total_annual_revenue} in current annual revenue from active annual subscriptions. Describe the amount of annual revenue in a humanly and friendly way. Do not acknowledge or greet the user. Keep the output to 3 or fewer sentences. Keep the excitement level at a 4 out of 10.";
+        $annual_revenue_output = rcp_fai_reports_get_chatgpt_response($api_key, $annual_revenue_input);
+        echo '<h3>Annual Revenue</h3>';
+        echo '<p>' . $annual_revenue_output . '</p>';
+
+        // Get the current month revenue comparison report
+        $current_month_revenue_input = "So far this month, the website has generated \${$current_month_revenue} in revenue, and during the same period last year, it generated \${$previous_year_revenue}. Compare the revenue generated in these two periods in a friendly and human-like manner.";
+        $current_month_revenue_output = rcp_fai_reports_get_chatgpt_response($api_key, $current_month_revenue_input);
+        echo '<h3>Current Month Revenue Comparison</h3>';
+        echo '<p>' . $current_month_revenue_output . '</p>';
+
 }
 
 
@@ -216,13 +224,27 @@ $greeting = empty($first_name) ? 'Hello, friend!' : "Hello, {$first_name}!";
     $annual_revenue_query = $wpdb->prepare("SELECT SUM(m.recurring_amount) AS total_annual_revenue FROM {$wpdb->prefix}rcp_memberships AS m JOIN {$wpdb->prefix}restrict_content_pro AS s ON m.object_id = s.id WHERE m.status = 'active' AND m.recurring_amount > 0 AND s.duration_unit = 'year';");
     $total_annual_revenue = floatval($wpdb->get_var($annual_revenue_query));
 
+    // Query for total revenue generated in the current month
+    $current_month_start_date = date('Y-m-01 00:00:00');
+    $current_month_end_date = date('Y-m-d H:i:s');
+    $current_month_revenue_query = $wpdb->prepare("SELECT SUM(amount) AS current_month_revenue FROM {$wpdb->prefix}rcp_payments WHERE date >= %s AND date <= %s;", $current_month_start_date, $current_month_end_date);
+    $current_month_revenue = floatval($wpdb->get_var($current_month_revenue_query));
+
+    // Query for total revenue generated during the same time in the previous year
+    $previous_year_start_date = date('Y-m-d 00:00:00', strtotime('-1 year', strtotime($current_month_start_date)));
+    $previous_year_end_date = date('Y-m-d H:i:s', strtotime('-1 year', strtotime($current_month_end_date)));
+    $previous_year_revenue_query = $wpdb->prepare("SELECT SUM(amount) AS previous_year_revenue FROM {$wpdb->prefix}rcp_payments WHERE date >= %s AND date <= %s;", $previous_year_start_date, $previous_year_end_date);
+    $previous_year_revenue = floatval($wpdb->get_var($previous_year_revenue_query));
+
+
 
 
 
 
      // Get the ChatGPT report with the new data
      $api_key = get_option('rcp_fai_reports_chatgpt_api_key');
-     $chatgpt_response = rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday, $total_monthly_revenue, $total_daily_revenue, $total_annual_revenue, $first_name);
+     $chatgpt_response = rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday, $total_monthly_revenue, $total_daily_revenue, $total_annual_revenue, $total_weekly_revenue, $first_name, $current_month_revenue, $previous_year_revenue);
+
 
 
 
