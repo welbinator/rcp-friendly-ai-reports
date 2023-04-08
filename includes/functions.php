@@ -141,9 +141,12 @@ add_action('rcp_reports_page_bottom', 'rcp_fai_display_friendly_reports_tab');
 
 
 function rcp_fai_reports_content() {
+    global $wpdb;
 
-global $wpdb;
-if (isset($_POST['get_friendly_report'])) { 
+    // Display the wrapper div
+    echo '<div class="rcp_friendly_reports_wrapper">';
+
+    if (isset($_POST['get_friendly_report'])) {
 
     // Get the first name of the logged-in user
     $current_user = wp_get_current_user();
@@ -192,16 +195,23 @@ if (isset($_POST['get_friendly_report'])) {
 
 
     echo $chatgpt_response;
-
-    $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'earnings';
-    rcp_fai_reports_friendly_reports_content($active_tab);
-
-} else {
-    // Display the button
-    echo '<form method="POST">';
-    echo '<input type="submit" name="get_friendly_report" value="Get My Friendly Report" class="button-primary" />';
-    echo '</form>';
 }
+
+// Display the button and the loading message
+echo '<form method="POST" id="friendly_report_form">';
+echo '<input type="submit" name="get_friendly_report" value="Get My Friendly Report" class="button-primary" />';
+echo '</form>';
+echo '<p id="loading_message" style="display: none;">Your friendly report is loading...</p>';
+
+// Close the wrapper div
+echo '</div>';
+
+// Add JavaScript to handle the button click and display the loading message
+echo '<script>
+    document.getElementById("friendly_report_form").addEventListener("submit", function() {
+        document.getElementById("loading_message").style.display = "block";
+    });
+</script>';
 }
 
 

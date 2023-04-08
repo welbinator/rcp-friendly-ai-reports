@@ -49,11 +49,8 @@ register_deactivation_hook(__FILE__, 'rcp_fai_reports_deactivate');
 
 // Enqueue scrips and styles
 
-//admin.js 
+
 function rcp_fai_reports_enqueue_admin_scripts($hook) {
-    if ('index.php' !== $hook) {
-        return;
-    }
 
     wp_enqueue_script(
         'rcp_fai_reports_admin_script',
@@ -71,6 +68,7 @@ function rcp_fai_reports_enqueue_admin_scripts($hook) {
             'nonce'   => wp_create_nonce('rcp_fai_reports_nonce')
         )
     );
+
     wp_enqueue_style(
         'rcp-friendly-ai-reports-admin',
         plugin_dir_url(__FILE__) . 'admin/css/admin.css',
@@ -78,8 +76,14 @@ function rcp_fai_reports_enqueue_admin_scripts($hook) {
         '1.0.0',
         'all'
     );
+
+    if (false !== strpos($hook, 'rcp-reports')) {
+        wp_enqueue_style('rcp_fai_rcp_styles', plugin_dir_url(__FILE__) . 'admin/css/rcp-styles.css', array(), '1.0.0');
+    }
 }
+
 add_action('admin_enqueue_scripts', 'rcp_fai_reports_enqueue_admin_scripts');
+
 
 
 
