@@ -160,32 +160,32 @@ function rcp_fai_reports_content() {
     $end_date = date('Y-m-d H:i:s'); // Update this line to use the current date and time
 
     // Query for new active memberships added yesterday until the moment the button is clicked
-    $new_memberships_query = $wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}rcp_memberships WHERE status = 'active' AND created_date >= %s AND created_date <= %s;", $start_date, $end_date);
+    $new_memberships_query = "SELECT COUNT(*) FROM {$wpdb->prefix}rcp_memberships WHERE status = 'active' AND created_date >= '$start_date' AND created_date <= '$end_date'";
     $new_memberships_yesterday = intval($wpdb->get_var($new_memberships_query));
 
 
     // Query for total monthly revenue from active monthly memberships
-    $monthly_revenue_query = $wpdb->prepare("SELECT SUM(m.recurring_amount) AS total_monthly_revenue FROM {$wpdb->prefix}rcp_memberships AS m JOIN {$wpdb->prefix}restrict_content_pro AS s ON m.object_id = s.id WHERE m.status = 'active' AND m.recurring_amount > 0 AND s.duration_unit = 'month';");
+    $monthly_revenue_query = "SELECT SUM(m.recurring_amount) AS total_monthly_revenue FROM {$wpdb->prefix}rcp_memberships AS m JOIN {$wpdb->prefix}restrict_content_pro AS s ON m.object_id = s.id WHERE m.status = 'active' AND m.recurring_amount > 0 AND s.duration_unit = 'month'";
     $total_monthly_revenue = floatval($wpdb->get_var($monthly_revenue_query));
 
     // Query for total daily revenue from active daily memberships
-    $daily_revenue_query = $wpdb->prepare("SELECT SUM(m.recurring_amount) AS total_daily_revenue FROM {$wpdb->prefix}rcp_memberships AS m JOIN {$wpdb->prefix}restrict_content_pro AS s ON m.object_id = s.id WHERE m.status = 'active' AND m.recurring_amount > 0 AND s.duration_unit = 'day';");
+    $daily_revenue_query = "SELECT SUM(m.recurring_amount) AS total_daily_revenue FROM {$wpdb->prefix}rcp_memberships AS m JOIN {$wpdb->prefix}restrict_content_pro AS s ON m.object_id = s.id WHERE m.status = 'active' AND m.recurring_amount > 0 AND s.duration_unit = 'day'";
     $total_daily_revenue = floatval($wpdb->get_var($daily_revenue_query));
 
     // Query for total annual revenue from active annual memberships
-    $annual_revenue_query = $wpdb->prepare("SELECT SUM(m.recurring_amount) AS total_annual_revenue FROM {$wpdb->prefix}rcp_memberships AS m JOIN {$wpdb->prefix}restrict_content_pro AS s ON m.object_id = s.id WHERE m.status = 'active' AND m.recurring_amount > 0 AND s.duration_unit = 'year';");
+    $annual_revenue_query = "SELECT SUM(m.recurring_amount) AS total_annual_revenue FROM {$wpdb->prefix}rcp_memberships AS m JOIN {$wpdb->prefix}restrict_content_pro AS s ON m.object_id = s.id WHERE m.status = 'active' AND m.recurring_amount > 0 AND s.duration_unit = 'year'";
     $total_annual_revenue = floatval($wpdb->get_var($annual_revenue_query));
-
+    
     // Query for total revenue generated in the current month
     $current_month_start_date = date('Y-m-01 00:00:00');
     $current_month_end_date = date('Y-m-d H:i:s');
-    $current_month_revenue_query = $wpdb->prepare("SELECT SUM(amount) AS current_month_revenue FROM {$wpdb->prefix}rcp_payments WHERE date >= %s AND date <= %s;", $current_month_start_date, $current_month_end_date);
+    $current_month_revenue_query = "SELECT SUM(amount) AS current_month_revenue FROM {$wpdb->prefix}rcp_payments WHERE date >= '$current_month_start_date' AND date <= '$current_month_end_date' AND status IN ('complete', 'refunded')";
     $current_month_revenue = floatval($wpdb->get_var($current_month_revenue_query));
 
     // Query for total revenue generated during the same time in the previous year
     $previous_year_start_date = date('Y-m-d 00:00:00', strtotime('-1 year', strtotime($current_month_start_date)));
     $previous_year_end_date = date('Y-m-d H:i:s', strtotime('-1 year', strtotime($current_month_end_date)));
-    $previous_year_revenue_query = $wpdb->prepare("SELECT SUM(amount) AS previous_year_revenue FROM {$wpdb->prefix}rcp_payments WHERE date >= %s AND date <= %s;", $previous_year_start_date, $previous_year_end_date);
+    $previous_year_revenue_query = "SELECT SUM(amount) AS previous_year_revenue FROM {$wpdb->prefix}rcp_payments WHERE date >= '$previous_year_start_date' AND date <= '$previous_year_end_date' AND status IN ('complete', 'refunded')";
     $previous_year_revenue = floatval($wpdb->get_var($previous_year_revenue_query));
 
 
@@ -266,19 +266,22 @@ function rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday
         echo '<p>' . $new_memberships_output . '</p>';
 
         // Get the monthly revenue report
+        $total_monthly_revenue = '$' . $total_monthly_revenue;
         $monthly_revenue_input = "There is {$total_monthly_revenue} in current monthly revenue from active monthly subscriptions, tell me in a humanly way how much monthly revenue we have currently.";
         $monthly_revenue_output = rcp_fai_reports_get_chatgpt_response($api_key, $monthly_revenue_input);
         echo '<h3>Monthly Revenue</h3>';
         echo '<p>' . $monthly_revenue_output . '</p>';
 
         // Get the daily revenue report
+        $total_daily_revenue = '$' . $total_daily_revenue;
         $daily_revenue_input = "There is {$total_daily_revenue} in current daily revenue from active daily subscriptions, tell me in a humanly way how much daily revenue we have currently.";
         $daily_revenue_output = rcp_fai_reports_get_chatgpt_response($api_key, $daily_revenue_input);
         echo '<h3>Daily Revenue</h3>';
         echo '<p>' . $daily_revenue_output . '</p>';
 
         // Get the annual revenue report
-        $annual_revenue_input = "Report: {$total_annual_revenue} in current annual revenue from active annual subscriptions. Describe the amount of annual revenue in a humanly and friendly way. Do not acknowledge or greet the user. Keep the output to 3 or fewer sentences. Keep the excitement level at a 4 out of 10.";
+        $total_annual_revenue = '$' . $total_annual_revenue;
+        $annual_revenue_input = "There is {$total_annual_revenue} in current annual revenue from active annual subscriptions, tell me in a humanly way how much annual revenue we currently have. Do not acknowledge or greet the user. Keep the output to 3 or fewer sentences.";
         $annual_revenue_output = rcp_fai_reports_get_chatgpt_response($api_key, $annual_revenue_input);
         echo '<h3>Annual Revenue</h3>';
         echo '<p>' . $annual_revenue_output . '</p>';
