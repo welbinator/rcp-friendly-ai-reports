@@ -275,28 +275,28 @@ function rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday
         echo '<p>' . $greeting_output . '</p>';
 
         // Get the new memberships report
-        $new_memberships_input = "There were {$new_memberships_yesterday} since yesterday, tell me in a humanly way how many new memberships we gained since yesterday. If the number is greater than 0, be excited about it.";
+        $new_memberships_input = "In 3 or fewer sentences, write a report on the number of new memberships gained yesterday, if that number was {$new_memberships_yesterday}.";
         $new_memberships_output = rcp_fai_reports_get_chatgpt_response($api_key, $new_memberships_input);
         echo '<h3>Total Memberships</h3>';
         echo '<p>' . $new_memberships_output . '</p>';
 
         // Get the monthly revenue report
         $total_monthly_revenue = '$' . $total_monthly_revenue;
-        $monthly_revenue_input = "There is {$total_monthly_revenue} in current monthly revenue from active monthly subscriptions, tell me in a humanly way how much monthly revenue we have currently.";
+        $monthly_revenue_input = "In 3 or fewer sentences, write a report on the current monthly revenue from active monthly subscriptions, if that dollar amount was {$total_monthly_revenue}.";
         $monthly_revenue_output = rcp_fai_reports_get_chatgpt_response($api_key, $monthly_revenue_input);
         echo '<h3>Monthly Revenue</h3>';
         echo '<p>' . $monthly_revenue_output . '</p>';
 
         // Get the daily revenue report
         $total_daily_revenue = '$' . $total_daily_revenue;
-        $daily_revenue_input = "There is {$total_daily_revenue} in current daily revenue from active daily subscriptions, tell me in a humanly way how much daily revenue we have currently.";
+        $daily_revenue_input = "In 3 or fewer sentences, write a report on the current daily revenue from active daily subscriptions, if that dollar amount was {$total_daily_revenue}.";
         $daily_revenue_output = rcp_fai_reports_get_chatgpt_response($api_key, $daily_revenue_input);
         echo '<h3>Daily Revenue</h3>';
         echo '<p>' . $daily_revenue_output . '</p>';
 
         // Get the annual revenue report
         $total_annual_revenue = '$' . $total_annual_revenue;
-        $annual_revenue_input = "There is {$total_annual_revenue} in current annual revenue from active annual subscriptions, tell me in a humanly way how much annual revenue we currently have. Do not acknowledge or greet the user. Keep the output to 3 or fewer sentences.";
+        $annual_revenue_input = "In 3 or fewer sentences, write a report on the current annual revenue from active annual subscriptions, if that dollar amount was {$total_annual_revenue}.";
         $annual_revenue_output = rcp_fai_reports_get_chatgpt_response($api_key, $annual_revenue_input);
         echo '<h3>Annual Revenue</h3>';
         echo '<p>' . $annual_revenue_output . '</p>';
