@@ -30,19 +30,22 @@ require_once RCP_FAI_REPORTS_PLUGIN_DIR . 'vendor/autoload.php';
 require_once RCP_FAI_REPORTS_PLUGIN_DIR . 'includes/functions.php';
 
 // Load plugin textdomain for translations
-function rcp_fai_reports_load_textdomain() {
+function rcp_fai_reports_load_textdomain()
+{
     load_plugin_textdomain('rcp-friendly-ai-reports', false, basename(RCP_FAI_REPORTS_PLUGIN_DIR) . '/languages');
 }
 add_action('plugins_loaded', 'rcp_fai_reports_load_textdomain');
 
 // Plugin activation function
-function rcp_fai_reports_activate() {
+function rcp_fai_reports_activate()
+{
     // Add any activation code here, such as creating database tables or setting default options
 }
 register_activation_hook(__FILE__, 'rcp_fai_reports_activate');
 
 // Plugin deactivation function
-function rcp_fai_reports_deactivate() {
+function rcp_fai_reports_deactivate()
+{
     // Add any deactivation code here, such as removing database tables or plugin options
 }
 register_deactivation_hook(__FILE__, 'rcp_fai_reports_deactivate');
@@ -50,7 +53,8 @@ register_deactivation_hook(__FILE__, 'rcp_fai_reports_deactivate');
 // Enqueue scrips and styles
 
 
-function rcp_fai_reports_enqueue_admin_scripts($hook) {
+function rcp_fai_reports_enqueue_admin_scripts($hook)
+{
 
     wp_enqueue_script(
         'rcp_fai_reports_admin_script',
