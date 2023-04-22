@@ -55,7 +55,10 @@ register_deactivation_hook(__FILE__, 'rcp_fai_reports_deactivate');
 
 function rcp_fai_reports_enqueue_admin_scripts($hook)
 {
-
+// Load scripts and styles only on the RCP reports page
+if ($hook !== 'restrict_page_rcp-reports') {
+    return;
+}
     wp_enqueue_script(
         'rcp_fai_reports_admin_script',
         RCP_FAI_REPORTS_PLUGIN_URL . 'admin/js/admin.js',
@@ -90,5 +93,37 @@ add_action('admin_enqueue_scripts', 'rcp_fai_reports_enqueue_admin_scripts');
 
 
 
+//email stuff
+add_action('wp_ajax_rcp_fai_reports_send_report', 'rcp_fai_reports_send_report');
 
-// Main plugin functionality goes here
+function rcp_fai_reports_send_report() {
+    check_ajax_referer('rcp_fai_reports_nonce');
+
+    // Get the report data
+    // You'll need to provide the appropriate variables here as arguments to the function
+    $report = rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday, $total_monthly_revenue, $total_daily_revenue, $total_annual_revenue, $first_name, $current_month_revenue, $previous_year_revenue);
+
+    // Send the report via email
+    $email_sent = send_report_to_admin($report);
+
+    if ($email_sent) {
+        echo 'The report has been sent to the admin email.';
+    } else {
+        echo 'Failed to send the report to the admin email.';
+    }
+}
+
+
+
+function send_report_to_admin($report) {
+    $to = get_option('admin_email');
+    $subject = 'Friendly AI Report';
+    $headers = 'Content-Type: text/html; charset=UTF-8';
+    $email_sent = wp_mail($to, $subject, $report, $headers);
+
+    if ($email_sent) {
+        return true;
+    } else {
+        return false;
+    }
+}
