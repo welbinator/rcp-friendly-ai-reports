@@ -152,8 +152,24 @@ function rcp_fai_reports_content()
 {
     global $wpdb;
 
+    if (isset($_POST['set_report_time'])) {
+        update_option('rcp_fai_reports_daily_report_time', intval($_POST['report_time']));
+    }
+
     // Display the wrapper div
     echo '<div class="rcp_friendly_reports_wrapper">';
+
+    // Display the dropdown for selecting the report time
+    echo '<h3>What time would you like your daily report?</h3>';
+    echo '<form method="POST" id="report_time_form">';
+    echo '<select name="report_time">';
+    for ($i = 0; $i < 24; $i++) {
+    $selected = get_option('rcp_fai_reports_daily_report_time') == $i ? 'selected' : '';
+    echo '<option value="' . $i . '" ' . $selected . '>' . sprintf("%02d", $i) . ':00</option>';
+    }
+    echo '</select>';
+    echo '<input type="submit" name="set_report_time" value="Set Report Time" class="button-primary" />';
+    echo '</form>';
 
     if (isset($_POST['get_friendly_report'])) {
 
@@ -224,61 +240,29 @@ function rcp_fai_reports_content()
 }
 
 
-// send the email automatically instead of using button
-function send_daily_report()
-{
-    global $wpdb;
+// Schedule the daily report event
+register_activation_hook(__FILE__, 'rcp_fai_reports_activate');
+register_deactivation_hook(__FILE__, 'rcp_fai_reports_deactivate');
 
-   
+function rcp_fai_reports_activate() {
+    if (!wp_next_scheduled('rcp_fai_reports_send_daily_report')) {
+        wp_schedule_event(time(), 'hourly', 'rcp_fai_reports_send_daily_report');
+    }
+}
 
-    if (isset($_POST['get_friendly_report'])) {
-
-        // Get the first name of the logged-in user
-        $current_user = wp_get_current_user();
-        $first_name = $current_user->user_firstname;
-
-        // Set a default greeting if the first name is empty
-        $greeting = empty($first_name) ? 'Hello, friend!' : "Hello, {$first_name}!";
-
-        // Get the date range for the previous day
-        $start_date = date('Y-m-d 00:00:00', strtotime('-1 day'));
-        $end_date = date('Y-m-d H:i:s'); // Update this line to use the current date and time
-
-        // Query for new active memberships added yesterday until the moment the button is clicked
-        $new_memberships_query = "SELECT COUNT(*) FROM {$wpdb->prefix}rcp_memberships WHERE status = 'active' AND created_date >= '$start_date' AND created_date <= '$end_date'";
-        $new_memberships_yesterday = intval($wpdb->get_var($new_memberships_query));
+function rcp_fai_reports_deactivate() {
+    wp_clear_scheduled_hook('rcp_fai_reports_send_daily_report');
+}
 
 
-        // Query for total monthly revenue from active monthly memberships
-        $monthly_revenue_query = "SELECT SUM(m.recurring_amount) AS total_monthly_revenue FROM {$wpdb->prefix}rcp_memberships AS m JOIN {$wpdb->prefix}restrict_content_pro AS s ON m.object_id = s.id WHERE m.status = 'active' AND m.recurring_amount > 0 AND s.duration_unit = 'month'";
-        $total_monthly_revenue = floatval($wpdb->get_var($monthly_revenue_query));
+add_action('rcp_fai_reports_send_daily_report', 'rcp_fai_reports_send_daily_report_email');
 
-        // Query for total daily revenue from active daily memberships
-        $daily_revenue_query = "SELECT SUM(m.recurring_amount) AS total_daily_revenue FROM {$wpdb->prefix}rcp_memberships AS m JOIN {$wpdb->prefix}restrict_content_pro AS s ON m.object_id = s.id WHERE m.status = 'active' AND m.recurring_amount > 0 AND s.duration_unit = 'day'";
-        $total_daily_revenue = floatval($wpdb->get_var($daily_revenue_query));
+function rcp_fai_reports_send_daily_report_email() {
+    $selected_hour = intval(get_option('rcp_fai_reports_daily_report_time'));
+    $current_hour = intval(date('H'));
 
-        // Query for total annual revenue from active annual memberships
-        $annual_revenue_query = "SELECT SUM(m.recurring_amount) AS total_annual_revenue FROM {$wpdb->prefix}rcp_memberships AS m JOIN {$wpdb->prefix}restrict_content_pro AS s ON m.object_id = s.id WHERE m.status = 'active' AND m.recurring_amount > 0 AND s.duration_unit = 'year'";
-        $total_annual_revenue = floatval($wpdb->get_var($annual_revenue_query));
-    
-        // Query for total revenue generated in the current month
-        $current_month_start_date = date('Y-m-01 00:00:00');
-        $current_month_end_date = date('Y-m-d H:i:s');
-        $current_month_revenue_query = "SELECT SUM(amount) AS current_month_revenue FROM {$wpdb->prefix}rcp_payments WHERE date >= '$current_month_start_date' AND date <= '$current_month_end_date' AND status IN ('complete', 'refunded')";
-        $current_month_revenue = floatval($wpdb->get_var($current_month_revenue_query));
-
-        // Query for total revenue generated during the same time in the previous year
-        $previous_year_start_date = date('Y-m-d 00:00:00', strtotime('-1 year', strtotime($current_month_start_date)));
-        $previous_year_end_date = date('Y-m-d H:i:s', strtotime('-1 year', strtotime($current_month_end_date)));
-        $previous_year_revenue_query = "SELECT SUM(amount) AS previous_year_revenue FROM {$wpdb->prefix}rcp_payments WHERE date >= '$previous_year_start_date' AND date <= '$previous_year_end_date' AND status IN ('complete', 'refunded')";
-        $previous_year_revenue = floatval($wpdb->get_var($previous_year_revenue_query));
-
-
-        // Get the ChatGPT report with the new data
-    $api_key = get_option('rcp_fai_reports_chatgpt_api_key');
-    $chatgpt_response = rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday, $total_monthly_revenue, $total_daily_revenue, $total_annual_revenue, $first_name, $current_month_revenue, $previous_year_revenue);
-
-    // Send the report content via email
+    if ($selected_hour === $current_hour) {
+        // Send the report content via email
     $to = get_option('admin_email');
     $subject = 'Friendly Report';
     $headers = array('Content-Type: text/html; charset=UTF-8');
@@ -288,16 +272,8 @@ function send_daily_report()
     } else {
         // Log failure message (optional)
     }
-}
-}
-
-// Schedule the daily report event
-function schedule_daily_report() {
-    if (!wp_next_scheduled('send_daily_report_event')) {
-        wp_schedule_event(strtotime('today 9am'), 'daily', 'send_daily_report_event');
     }
 }
-add_action('wp', 'schedule_daily_report');
 
 // Hook the send_daily_report() function to the scheduled event
 add_action('send_daily_report_event', 'send_daily_report');
