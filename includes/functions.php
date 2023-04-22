@@ -202,16 +202,10 @@ function rcp_fai_reports_content()
       $api_key = get_option('rcp_fai_reports_chatgpt_api_key');
       $chatgpt_response = rcp_fai_reports_get_chatgpt_report($api_key, $new_memberships_yesterday, $total_monthly_revenue, $total_daily_revenue, $total_annual_revenue, $first_name, $current_month_revenue, $previous_year_revenue);
 
-      // Send the report content via email
-      $to = get_option('admin_email');
-      $subject = 'Friendly Report';
-      $headers = array('Content-Type: text/html; charset=UTF-8');
-
-      if (wp_mail($to, $subject, $chatgpt_response, $headers)) {
-          error_log( 'Email sent successfully' );
-      } else {
-          error_log( 'Email failed to send' );
-      }
+      // Display the report content in the browser
+    echo '<div id="report_content">';
+    echo $chatgpt_response;
+    echo '</div>';
   }
 
   // Display the button and the loading message
@@ -294,6 +288,7 @@ function send_daily_report()
     } else {
         // Log failure message (optional)
     }
+}
 }
 
 // Schedule the daily report event
